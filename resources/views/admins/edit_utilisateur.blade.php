@@ -4,32 +4,56 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h2>Modifier un Utilisateur</h2>
-              
-            <form class="form-card fc" action="{{route('update_utilisateur',$utilisateur->id)}}" method="POST">
-                @csrf
-               
-                <label for="type" class=" col-form-label text-md-end">Nom</label>
-                <input type="text" class="form-control" value="{{$utilisateur->name}}" name="name" > <br>
-                @if ($errors->has('name'))
-                    <div class="text-danger">{{ $errors->first('name') }}</div>
-                @endif
-                <label for="type" class=" col-form-label text-md-end">Email</label>
-                <input type="text" class="form-control" value="{{$utilisateur->email}}" name="email" > <br>
-                @if ($errors->has('email'))
-                    <div class="text-danger">{{ $errors->first('email') }}</div>
-                @endif
-                <label for="type" class=" col-form-label text-md-end">password</label>
-                <input type="password" class="form-control" placeholder="new password" name="password" required> <br>
-                <label for="type" class=" col-form-label text-md-end">confirm password</label>
-                <input type="password" class="form-control" placeholder="confirm new password" name="password_confirmation" required> <br>
+            <div class="d-flex bd-highlight mb-3">
+                <div class="me-auto p-2 bd-highlight"><h2>Modifier un Utilisateur</h2></div>
+                <div class="p-2 bd-highlight">
+                    <a class="btn btn-secondary" href="{{ route('liste_utilisateur') }}">Back</a>
+                </div>
+            </div>
 
-                @if ($errors->has('password'))
-                    <div class="text-danger">{{ $errors->first('password') }}</div>
-                @endif
-                    <button class="btn btn-info" type="submit" value="save">Modifier</button>
-                    <a class="btn btn-secondary" href="{{route('liste_utilisateur')}}">Annuler</a>
-            </form> 
+            @if(Session::has('error'))
+            <div class="alert alert-danger">
+                {{ Session::get('error') }}
+            </div>
+            @endif
+
+            <form class="form-card fc" action="{{ route('update_utilisateur', $utilisateur->id) }}" method="POST">
+                @csrf
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nom</label>
+                    <input type="text" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $utilisateur->name) }}" name="name" required>
+                    @error('name')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $utilisateur->email) }}" name="email" required>
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Nouveau mot de passe (laisser vide pour ne pas modifier)</label>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" placeholder="Nouveau mot de passe" name="password">
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="password_confirmation" class="form-label">Confirmer le nouveau mot de passe</label>
+                    <input type="password" class="form-control" placeholder="Confirmer le nouveau mot de passe" name="password_confirmation">
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary" type="submit">Modifier</button>
+                    <a class="btn btn-secondary" href="{{ route('liste_utilisateur') }}">Annuler</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

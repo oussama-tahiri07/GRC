@@ -2,14 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoredSolutionRequest;
-use App\Models\reclamation;
+use App\Models\Reclamation;
 use App\Http\Requests\StorereclamationRequest;
 use App\Http\Requests\UpdatereclamationRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Solution;
-use GuzzleHttp\Psr7\Request;
-use Illuminate\Routing\Route;
 
 class ReclamationController extends Controller
 {
@@ -18,7 +14,9 @@ class ReclamationController extends Controller
      */
     public function index()
     {
-        $reclamations = Reclamation::all()->where('etat', "!=", "fermée")->where('etat', "!=", "refusée");
+        $reclamations = Reclamation::where('user_id', Auth::id())
+            ->whereNotIn('etat', ['fermée', 'refusée'])
+            ->get();
 
         return view('users.gestion_reclamation', compact('reclamations'));
     }
@@ -33,58 +31,56 @@ class ReclamationController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
      */
     public function store(StorereclamationRequest $request)
     {
-        // save image in folder public/images/reclamations
         $file_name = null;
-        if ($request->image) {
-            $file_extension = $request->image->getClientOriginalExtension();
-            $file_name = time() . "." . $file_extension;
-            $path = 'images/reclamations';
-
-            $request->image->move($path, $file_name);
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $extension = $request->file('image')->extension();
+            $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+            if (in_array(strtolower($extension), $allowedExtensions, true)) {
+                $file_name = time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+                $request->file('image')->move(public_path('images/reclamations'), $file_name);
+            }
         }
+
         Reclamation::create([
             'name' => $request->input('name'),
             'description' => $request->input('description'),
             'type' => $request->input('type'),
             'etat' => 'en attente',
-            'user_id' => $request->input('user_id'),
+            'user_id' => Auth::id(),
             'image' => $file_name,
         ]);
 
-        return redirect()->route('gestion_reclamation');
+        return redirect()->route('gestion_reclamation')->with(['success' => 'Réclamation créée avec succès']);
     }
 
     /**
      * Display the specified resource.
-     *
      */
     public function show($reclamation_id)
     {
-        $user = Auth::user();
         $reclamation = Reclamation::where('id', $reclamation_id)
-            ->where('user_id', $user->id)
+            ->where('user_id', Auth::id())
             ->firstOrFail();
+
         return view('users.show_reclamation', compact('reclamation'));
     }
 
-
     /**
      * Show the form for editing the specified resource.
-     *
      */
     public function edit($reclamation_id)
     {
-        //check
-        $reclamation = Reclamation::find($reclamation_id);
+        $reclamation = Reclamation::where('id', $reclamation_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
         if (!$reclamation) {
-            return redirect()->back()->with(['error' => 'reclamation introuvable']);
+            return redirect()->route('gestion_reclamation')->with(['error' => 'Réclamation introuvable ou accès non autorisé']);
         }
-        //redirect to edit form
-        $reclamation = Reclamation::select('id', 'user_id', 'type', 'etat', 'description', 'image')->find($reclamation_id);
+
         return view('users.edit_reclamation', compact('reclamation'));
     }
 
@@ -93,66 +89,93 @@ class ReclamationController extends Controller
      */
     public function update(UpdatereclamationRequest $request, $reclamation_id)
     {
-        $reclamation = Reclamation::find($reclamation_id);
+        $reclamation = Reclamation::where('id', $reclamation_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
         if (!$reclamation) {
-            return redirect()->back()->with(['error' => 'reclamation introuvable']);
+            return redirect()->route('gestion_reclamation')->with(['error' => 'Réclamation introuvable ou accès non autorisé']);
         }
 
-        // save image in folder public/images/reclamations
-        $file_name = null;
-        if ($request->image) {
-            $file_extension = $request->image->getClientOriginalExtension();
-            $file_name = time() . "." . $file_extension;
-            $path = 'images/reclamations';
-
-            $request->image->move($path, $file_name);
-        }
-        $reclamation->update([
+        $updateData = [
             'name' => $request->input('name'),
             'description' => $request->input('description'),
             'type' => $request->input('type'),
-            'etat' => $request->input('etat'),
-            'image' => $file_name,
-        ]);
-        return redirect()->route('gestion_reclamation')->with(['success' => 'réclamation mise à jour']);
+        ];
+
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $extension = $request->file('image')->extension();
+            $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+            if (in_array(strtolower($extension), $allowedExtensions, true)) {
+                // Delete previous image if exists
+                if ($reclamation->image && file_exists(public_path('images/reclamations/' . $reclamation->image))) {
+                    @unlink(public_path('images/reclamations/' . $reclamation->image));
+                }
+
+                $file_name = time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+                $request->file('image')->move(public_path('images/reclamations'), $file_name);
+                $updateData['image'] = $file_name;
+            }
+        }
+
+        $reclamation->update($updateData);
+
+        return redirect()->route('gestion_reclamation')->with(['success' => 'Réclamation mise à jour avec succès']);
     }
 
     /**
      * Remove the specified resource from storage.
-     *
      */
     public function destroy($reclamation_id)
     {
-        //check if exist
-        $reclamation = Reclamation::find($reclamation_id);
+        $reclamation = Reclamation::where('id', $reclamation_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
         if (!$reclamation) {
-            return redirect()->back()->with(['error' => 'réclamation introuvable']);
+            return redirect()->route('gestion_reclamation')->with(['error' => 'Réclamation introuvable ou accès non autorisé']);
         }
-        //delete
+
+        if ($reclamation->image && file_exists(public_path('images/reclamations/' . $reclamation->image))) {
+            @unlink(public_path('images/reclamations/' . $reclamation->image));
+        }
+
         $reclamation->delete();
-        return redirect()->route('gestion_reclamation')->with(['delete-success' => 'réclamation supprimée']);
+
+        return redirect()->route('gestion_reclamation')->with(['delete-success' => 'Réclamation supprimée']);
     }
 
     public function show_reclamations_traitee()
     {
-        $reclamations = Reclamation::all()->where('etat', "traitée");
+        $reclamations = Reclamation::where('user_id', Auth::id())
+            ->where('etat', 'traitée')
+            ->get();
+
         return view('users.reclamations_traitee', compact('reclamations'));
     }
+
     public function show_reclamations_refusee()
     {
-        $reclamations = Reclamation::all()->where('etat', "refusée");
+        $reclamations = Reclamation::where('user_id', Auth::id())
+            ->where('etat', 'refusée')
+            ->get();
+
         return view('users.reclamations_refusee', compact('reclamations'));
     }
 
-    //***************Solution ****************//
+    //*************** Solution ****************//
     public function accepte_solution_reclamation($reclamation_id)
     {
-        $reclamation = Reclamation::find($reclamation_id);
+        $reclamation = Reclamation::where('id', $reclamation_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
         if (!$reclamation) {
-            return redirect()->back()->with(['error' => 'réclamation introuvable']);
+            return redirect()->route('liste_reclamations_traitee')->with(['error' => 'Réclamation introuvable ou accès non autorisé']);
         }
 
         $reclamation->update(['etat' => 'fermée']);
-        return redirect()->route('liste_reclamations_traitee')->with(['success' => 'réclamation ' . $reclamation_id . ' fermée']);
+
+        return redirect()->route('liste_reclamations_traitee')->with(['success' => 'Réclamation ' . $reclamation_id . ' fermée']);
     }
 }

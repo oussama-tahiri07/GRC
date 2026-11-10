@@ -9,28 +9,36 @@
           <h2>Reclamations</h2>
         </div>
         <div class="p-2 bd-highlight">
-          <a class="btn btn-success" href="{{route('liste_reclamations_traitee')}}">Reclamations Traitée</a>
-          <a class="btn btn-danger" href="{{route('liste_reclamations_refusee')}}">Reclamations Refusée</a>
-          <a class="btn btn-secondary" href="{{route('create_reclamation')}}">Create</a>
+          <a class="btn btn-success" href="{{ route('liste_reclamations_traitee') }}">Reclamations Traitée</a>
+          <a class="btn btn-danger" href="{{ route('liste_reclamations_refusee') }}">Reclamations Refusée</a>
+          <a class="btn btn-secondary" href="{{ route('create_reclamation') }}">Create</a>
         </div>
       </div>
+
       @if(Session::has('success'))
       <div class="alert alert-success">
-        {{Session::get('success')}}
+        {{ Session::get('success') }}
+      </div>
+      @endif
+
+      @if(Session::has('delete-success'))
+      <div class="alert alert-success">
+        {{ Session::get('delete-success') }}
       </div>
       @endif
 
       @if(Session::has('error'))
       <div class="alert alert-danger">
-        {{Session::get('error')}}
+        {{ Session::get('error') }}
       </div>
       @endif
+
       <div class="table-responsive">
         <table class="table">
           <thead>
             <tr>
               <th scope="col">ID</th>
-              <th scope="col">Nom </th>
+              <th scope="col">Nom</th>
               <th scope="col">Type</th>
               <th scope="col">Etat</th>
               <th scope="col">Description</th>
@@ -38,25 +46,28 @@
             </tr>
           </thead>
           <tbody id="mytable">
-
-            @foreach($reclamations as $reclamation)
+            @forelse($reclamations as $reclamation)
             <tr>
-              @if(Auth::user()->id==$reclamation->user_id)
-              <th scope="row">{{$reclamation->id}}</th>
-              <th scope="row">{{$reclamation->name}}</th>
-              <th scope="row">{{$reclamation->type}}</th>
-              <th scope="row">{{$reclamation->etat}}</th>
-              <th scope="row">{{$reclamation->description}}</th>
-              <th scope="row">
-                <!-- <a class="btn btn-light" href="">Show</a> -->
-                <a class="btn btn-success" href="{{route('edit_reclamation',$reclamation->id)}}">Edit</a>
-                <a class="btn btn-danger" href="{{route('delete_reclamation',$reclamation->id)}}">Delete</a>
-                <a class="btn btn-light" href="{{route('show_reclamation',$reclamation->id)}}">Show</a>
-              </th>
-              @endif
+              <th scope="row">{{ $reclamation->id }}</th>
+              <td>{{ $reclamation->name }}</td>
+              <td>{{ $reclamation->type }}</td>
+              <td><span class="badge bg-primary">{{ $reclamation->etat }}</span></td>
+              <td>{{ Str::limit($reclamation->description, 50) }}</td>
+              <td>
+                <a class="btn btn-light btn-sm" href="{{ route('show_reclamation', $reclamation->id) }}">Show</a>
+                <a class="btn btn-success btn-sm" href="{{ route('edit_reclamation', $reclamation->id) }}">Edit</a>
+                <form action="{{ route('delete_reclamation', $reclamation->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette réclamation ?');">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
             </tr>
-            @endforeach
-
+            @empty
+            <tr>
+              <td colspan="6" class="text-center text-muted">Aucune réclamation trouvée.</td>
+            </tr>
+            @endforelse
           </tbody>
         </table>
       </div>

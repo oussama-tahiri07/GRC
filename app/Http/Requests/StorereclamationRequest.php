@@ -24,9 +24,10 @@ class StorereclamationRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required',
-            'type' => 'required',
-            'description' => 'required'
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|in:Remarque,Demande d\'intervention,Excalation',
+            'description' => 'required|string|max:2000',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
     }
 }

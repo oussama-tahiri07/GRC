@@ -8,12 +8,11 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>GRC</title>
+    <title>GRC - Gestion des réclamations</title>
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
-    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -28,12 +27,11 @@
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-3">
-                    <a class="navbar-brand" href="{{ url('users/home') }}">
-                        <img src="{{ asset('images/BCS.png') }}" width="60" alt="" />
-                        Gestion des réclamations
-                    </a>
-                </ul>
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('users/home') }}">
+                    <img src="{{ asset('images/BCS.png') }}" width="45" alt="Logo" />
+                    <span>Gestion des réclamations</span>
+                </a>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -41,7 +39,17 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
-
+                        @auth
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('home') }}">Accueil</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('gestion_reclamation') }}">Mes réclamations</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('create_reclamation') }}">Nouvelle réclamation</a>
+                        </li>
+                        @endauth
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -83,36 +91,9 @@
         </nav>
 
         <main class="py-4">
-            <!-- <div class="col-3">
-
-                <ul class="navbar-nav ms-auto">
-                    @if(Auth::guard('admin')->check())
-                    
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin-home') }}">Home</a>
-                    </li>
-                    <br>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('liste_utilisateur') }}">gestion des utilisateurs</a>
-                    </li>
-                    @elseif(Auth::guard('web')->check())
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('home') }}">Home</a>
-                    </li>
-                    <br>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('gestion_reclamation') }}">gestion des reclamations</a>
-                    </li>
-                    @endif
-                </ul>
-            </div> -->
             @yield('content')
         </main>
-
     </div>
-
 </body>
 
 </html>

@@ -21,8 +21,10 @@ Route::group(['prefix' => 'prestataire', 'middleware' => 'auth:prestataire'], fu
     Route::post('reclamation-traiter/{reclamation_id}', [PrestataireController::class, 'reclamation_resolue'])->name('reclamation_resolue');
 });
 
-Route::get('prestataire/login', [LoginController::class, 'prestataireLoginForm'])->name('prestataire.login');;
+Route::get('prestataire/login', [LoginController::class, 'prestataireLoginForm'])->name('prestataire.login');
 Route::post('prestataire/login', [LoginController::class, 'loginPrestataire'])->name('prestataire-login');
+Route::post('prestataire/logout', [LoginController::class, 'logoutPrestataire'])->name('prestataire.logout');
 
+// Registration of prestataires (guarded inside controller so only admins can create them)
 Route::get('prestataire/register', [RegisterController::class, 'PrestataireRegisterForm'])->name('prestataire.register');
 Route::post('prestataire/register', [RegisterController::class, 'createPrestataire'])->name('prestataire-register');

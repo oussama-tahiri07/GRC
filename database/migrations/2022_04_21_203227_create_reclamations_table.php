@@ -16,12 +16,14 @@ class CreateReclamationsTable extends Migration
         Schema::create('reclamations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description');
+            $table->text('description');
             $table->string('type');
-            $table->string('etat');
-            $table->unsignedBigInteger('user_id')->nullable(); // Modify the data type to unsigned big integer
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->string('etat')->default('en attente');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('image')->nullable();
+            $table->text('solution')->nullable();
+            $table->text('raison_du_refus')->nullable();
             $table->timestamps();
         });
     }
@@ -36,5 +38,3 @@ class CreateReclamationsTable extends Migration
         Schema::dropIfExists('reclamations');
     }
 }
-
-?>
